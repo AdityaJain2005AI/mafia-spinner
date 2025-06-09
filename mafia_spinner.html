@@ -136,13 +136,11 @@
       wheel.style.transform = `rotate(${deg}deg)`;
 
       setTimeout(() => {
-        // Calculate the landing segment
         const normalizedDeg = deg % 360;
-        // Each segment is 36 degrees (360/10)
+        
         const index = Math.floor((360 - normalizedDeg) / 36) % labels.length;
 
-        // Assign role from roles list randomly but consistent with spin segment
-        // To keep it simple, just pick the role at index if still available, else random from remaining
+        
         let role = null;
         if (roles.includes(labels[index])) {
           const roleIndex = roles.indexOf(labels[index]);
