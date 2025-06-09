@@ -146,7 +146,6 @@
           const roleIndex = roles.indexOf(labels[index]);
           role = roles.splice(roleIndex, 1)[0];
         } else {
-          // fallback, pick any random remaining role
           const randIndex = Math.floor(Math.random() * roles.length);
           role = roles.splice(randIndex, 1)[0];
         }
