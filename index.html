@@ -104,7 +104,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzw0NZwe7j2Q0QZBsP1Njh5txRKlHZ6AE8M4tIboI1yEOIBt8rOtOJhCmQUzm5FIgGN/exec";
     const roles = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
     const assigned = [];
-    const labels = [...roles];
+    const labels = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
     let spinning = false;
 
     function createWheelLabels() {
@@ -161,6 +161,7 @@
         row.appendChild(roleCell);
         document.getElementById("recordBody").appendChild(row);
 
+        
         const formData = new FormData();
         formData.append("Name", name);
         formData.append("Role", role);
@@ -168,8 +169,10 @@
         fetch(SCRIPT_URL, {
           method: "POST",
           body: formData
-        }).then(() => console.log("Submitted to Google Sheet"))
-          .catch(err => console.error("Error:", err));
+        })
+        .then(response => response.json())
+        .then(data => console.log("Success:", data))
+        .catch(error => console.error("Error:", error));
 
         nameInput.value = "";
         spinning = false;
