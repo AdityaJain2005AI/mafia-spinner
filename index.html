@@ -101,10 +101,10 @@
   </table>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/a/macros/vitstudent.ac.in/s/AKfycbx7Lmi5h9qNdYVsbcNOcAoGAOtxbb-rGUx72c7Xa9MsRut75V9wO6TcQ88oKXTo1DjS/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzw0NZwe7j2Q0QZBsP1Njh5txRKlHZ6AE8M4tIboI1yEOIBt8rOtOJhCmQUzm5FIgGN/exec";
     const roles = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
     const assigned = [];
-    const labels = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
+    const labels = [...roles];
     let spinning = false;
 
     function createWheelLabels() {
@@ -137,10 +137,8 @@
 
       setTimeout(() => {
         const normalizedDeg = deg % 360;
-        
         const index = Math.floor((360 - normalizedDeg) / 36) % labels.length;
 
-        
         let role = null;
         if (roles.includes(labels[index])) {
           const roleIndex = roles.indexOf(labels[index]);
@@ -163,10 +161,13 @@
         row.appendChild(roleCell);
         document.getElementById("recordBody").appendChild(row);
 
+        const formData = new FormData();
+        formData.append("Name", name);
+        formData.append("Role", role);
+
         fetch(SCRIPT_URL, {
           method: "POST",
-          body: JSON.stringify({ name, role }),
-          headers: { "Content-Type": "application/json" }
+          body: formData
         }).then(() => console.log("Submitted to Google Sheet"))
           .catch(err => console.error("Error:", err));
 
