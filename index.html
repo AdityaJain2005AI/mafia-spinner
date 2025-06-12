@@ -98,7 +98,6 @@
     <option value="9">Team 9</option>
     <option value="10">Team 10</option>
   </select>
-
   <button onclick="spinWheel()">Spin for Role</button>
 
   <div id="pointer"></div>
@@ -116,10 +115,12 @@
   </table>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxXyJaADyVTG-KlYfN9u0_zq5m3SmrwaZOoPj9DcOf2Hx67n-WAB87HBZwKzBkitIhM/exec";
-    const roles = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXyJaADyVTG-KlYfN9u0_zq5m3SmrwaZOoPj9DcOf2Hx67n-WAB87HBZwKzBkitIhM/exec";
+
+    const initialRoles = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
+    const roles = [...initialRoles];
+    const labels = [...initialRoles];
     const assigned = [];
-    const labels = [...roles];
     let spinning = false;
 
     function createWheelLabels() {
@@ -157,16 +158,18 @@
       setTimeout(() => {
         const normalizedDeg = deg % 360;
         const index = Math.floor((360 - normalizedDeg) / 36) % labels.length;
+        let selectedRole = labels[index];
 
-        let role = null;
-        if (roles.includes(labels[index])) {
-          const roleIndex = roles.indexOf(labels[index]);
-          role = roles.splice(roleIndex, 1)[0];
-        } else {
-          const randIndex = Math.floor(Math.random() * roles.length);
-          role = roles.splice(randIndex, 1)[0];
+        if (!roles.includes(selectedRole)) {
+          selectedRole = roles[Math.floor(Math.random() * roles.length)];
         }
 
+        const roleIndex = roles.indexOf(selectedRole);
+        if (roleIndex !== -1) {
+          roles.splice(roleIndex, 1);
+        }
+
+        const role = selectedRole;
         assigned.push({ name, role });
 
         document.getElementById("result").textContent = `${name}, you are assigned the role: ${role}`;
@@ -180,18 +183,14 @@
         row.appendChild(roleCell);
         document.getElementById("recordBody").appendChild(row);
 
-        // Send to Google Sheet
-        const formData = new URLSearchParams();
+        const formData = new FormData();
         formData.append("Name", name);
         formData.append("Role", role);
-        formData.append("Team", team);
+        formData.append("Team", team); // send to correct sheet
 
-        fetch(scriptURL, {
+        fetch(SCRIPT_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: formData.toString()
+          body: formData
         })
         .then(response => response.json())
         .then(data => console.log("Success:", data))
