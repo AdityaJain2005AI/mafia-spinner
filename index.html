@@ -10,7 +10,7 @@
       text-align: center;
       padding: 30px;
     }
-    input, button {
+    input, button, select {
       padding: 10px;
       font-size: 16px;
       margin: 10px;
@@ -83,7 +83,22 @@
 </head>
 <body>
   <h1>Mafia Game Role Spinner</h1>
+
   <input type="text" id="playerName" placeholder="Enter your name" />
+  <select id="teamNumber">
+    <option value="">Select Team</option>
+    <option value="1">Team 1</option>
+    <option value="2">Team 2</option>
+    <option value="3">Team 3</option>
+    <option value="4">Team 4</option>
+    <option value="5">Team 5</option>
+    <option value="6">Team 6</option>
+    <option value="7">Team 7</option>
+    <option value="8">Team 8</option>
+    <option value="9">Team 9</option>
+    <option value="10">Team 10</option>
+  </select>
+
   <button onclick="spinWheel()">Spin for Role</button>
 
   <div id="pointer"></div>
@@ -101,10 +116,10 @@
   </table>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzw0NZwe7j2Q0QZBsP1Njh5txRKlHZ6AE8M4tIboI1yEOIBt8rOtOJhCmQUzm5FIgGN/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxXyJaADyVTG-KlYfN9u0_zq5m3SmrwaZOoPj9DcOf2Hx67n-WAB87HBZwKzBkitIhM/exec";
     const roles = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
     const assigned = [];
-    const labels = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
+    const labels = [...roles];
     let spinning = false;
 
     function createWheelLabels() {
@@ -121,8 +136,12 @@
 
     function spinWheel() {
       const nameInput = document.getElementById("playerName");
+      const teamInput = document.getElementById("teamNumber");
       const name = nameInput.value.trim();
+      const team = teamInput.value;
+
       if (!name) return alert("Please enter a name.");
+      if (!team) return alert("Please select a team.");
       if (assigned.find(p => p.name.toLowerCase() === name.toLowerCase())) {
         return alert("This name has already been assigned a role.");
       }
@@ -161,14 +180,18 @@
         row.appendChild(roleCell);
         document.getElementById("recordBody").appendChild(row);
 
-        
-        const formData = new FormData();
+        // Send to Google Sheet
+        const formData = new URLSearchParams();
         formData.append("Name", name);
         formData.append("Role", role);
+        formData.append("Team", team);
 
-        fetch(SCRIPT_URL, {
+        fetch(scriptURL, {
           method: "POST",
-          body: formData
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: formData.toString()
         })
         .then(response => response.json())
         .then(data => console.log("Success:", data))
