@@ -85,6 +85,7 @@
   <h1>Mafia Game Role Spinner</h1>
 
   <input type="text" id="playerName" placeholder="Enter your name" />
+  <input type="text" id="whatsapp" placeholder="Enter WhatsApp number" />
   <select id="teamNumber">
     <option value="">Select Team</option>
     <option value="1">Team 1</option>
@@ -98,29 +99,27 @@
     <option value="9">Team 9</option>
     <option value="10">Team 10</option>
   </select>
+  <br />
   <button onclick="spinWheel()">Spin for Role</button>
 
   <div id="pointer"></div>
-  <div id="wheelContainer">
-    <div id="wheel"></div>
-  </div>
-
+  <div id="wheelContainer"><div id="wheel"></div></div>
   <div id="result"></div>
 
   <table id="recordTable">
     <thead>
-      <tr><th>Name</th><th>Assigned Role</th></tr>
+      <tr><th>Name</th><th>WhatsApp</th><th>Role</th></tr>
     </thead>
     <tbody id="recordBody"></tbody>
   </table>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXyJaADyVTG-KlYfN9u0_zq5m3SmrwaZOoPj9DcOf2Hx67n-WAB87HBZwKzBkitIhM/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzB1rNB1coET4K9oh1biidNOGfHuw7FlWGV66F8HeQvZBLnySSFRSydjtnFaxYlAgMj/exec";
 
-    const initialRoles = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
-    const roles = [...initialRoles];
-    const labels = [...initialRoles];
+    const rolesOriginal = ["Mafia", "Mafia", "Healer", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen", "Citizen"];
+    let roles = [...rolesOriginal];
     const assigned = [];
+    const labels = [...rolesOriginal];
     let spinning = false;
 
     function createWheelLabels() {
@@ -136,20 +135,28 @@
     }
 
     function spinWheel() {
-      const nameInput = document.getElementById("playerName");
-      const teamInput = document.getElementById("teamNumber");
-      const name = nameInput.value.trim();
-      const team = teamInput.value;
+      const name = document.getElementById("playerName").value.trim();
+      const whatsapp = document.getElementById("whatsapp").value.trim();
+      const team = document.getElementById("teamNumber").value;
 
-      if (!name) return alert("Please enter a name.");
-      if (!team) return alert("Please select a team.");
-      if (assigned.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-        return alert("This name has already been assigned a role.");
+      if (!name || !whatsapp || !team) {
+        alert("Please enter all fields.");
+        return;
       }
-      if (roles.length === 0) return alert("All roles have been assigned.");
-      if (spinning) return;
 
+      if (assigned.find(p => p.name.toLowerCase() === name.toLowerCase() && p.team === team)) {
+        alert("This name has already been assigned a role in this team.");
+        return;
+      }
+
+      if (roles.length === 0) {
+        alert("All roles have been assigned.");
+        return;
+      }
+
+      if (spinning) return;
       spinning = true;
+
       const wheel = document.getElementById("wheel");
       const deg = 3600 + Math.floor(Math.random() * 360);
       wheel.style.transition = "transform 4s ease-out";
@@ -158,46 +165,53 @@
       setTimeout(() => {
         const normalizedDeg = deg % 360;
         const index = Math.floor((360 - normalizedDeg) / 36) % labels.length;
-        let selectedRole = labels[index];
 
-        if (!roles.includes(selectedRole)) {
-          selectedRole = roles[Math.floor(Math.random() * roles.length)];
+        let selectedRole = null;
+        if (roles.includes(labels[index])) {
+          selectedRole = labels[index];
+        } else {
+          selectedRole = roles[0];
         }
 
-        const roleIndex = roles.indexOf(selectedRole);
-        if (roleIndex !== -1) {
-          roles.splice(roleIndex, 1);
+        // Enforce role limits
+        const count = assigned.filter(p => p.role === selectedRole && p.team === team).length;
+        const maxCount = selectedRole === "Mafia" ? 2 : selectedRole === "Healer" ? 1 : 100;
+
+        if (count >= maxCount) {
+          selectedRole = roles.find(r => {
+            const c = assigned.filter(p => p.role === r && p.team === team).length;
+            const m = r === "Mafia" ? 2 : r === "Healer" ? 1 : 100;
+            return c < m;
+          });
         }
 
-        const role = selectedRole;
-        assigned.push({ name, role });
+        roles.splice(roles.indexOf(selectedRole), 1);
+        assigned.push({ name, role: selectedRole, team });
 
-        document.getElementById("result").textContent = `${name}, you are assigned the role: ${role}`;
+        document.getElementById("result").textContent = `${name}, you are assigned the role: ${selectedRole}`;
 
         const row = document.createElement("tr");
-        const nameCell = document.createElement("td");
-        const roleCell = document.createElement("td");
-        nameCell.textContent = name;
-        roleCell.textContent = role;
-        row.appendChild(nameCell);
-        row.appendChild(roleCell);
+        row.innerHTML = `<td>${name}</td><td>${whatsapp}</td><td>${selectedRole}</td>`;
         document.getElementById("recordBody").appendChild(row);
 
         const formData = new FormData();
         formData.append("Name", name);
-        formData.append("Role", role);
-        formData.append("Team", team); // send to correct sheet
+        formData.append("WhatsApp", whatsapp);
+        formData.append("Role", selectedRole);
+        formData.append("Team", team);
 
         fetch(SCRIPT_URL, {
           method: "POST",
           body: formData
         })
-        .then(response => response.json())
-        .then(data => console.log("Success:", data))
-        .catch(error => console.error("Error:", error));
+        .then(res => res.json())
+        .then(data => console.log("Success", data))
+        .catch(err => console.error("Error", err));
 
-        nameInput.value = "";
         spinning = false;
+        document.getElementById("playerName").value = "";
+        document.getElementById("whatsapp").value = "";
+        document.getElementById("teamNumber").value = "";
       }, 4200);
     }
 
